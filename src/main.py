@@ -22,8 +22,18 @@ from src.render.compose import mux_video_and_audio
 from src.render.video import (
     prepare_bubble_sort_events,
     prepare_bogo_sort_events,
+    prepare_selection_sort_events,
+    prepare_insertion_sort_events,
+    prepare_shell_sort_events,
+    prepare_merge_sort_events,
+    prepare_quick_sort_events,
     render_bubble_sort_video,
     render_bogo_sort_video,
+    render_selection_sort_video,
+    render_insertion_sort_video,
+    render_shell_sort_video,
+    render_merge_sort_video,
+    render_quick_sort_video,
 )
 
 # ---- アルゴリズム registry ----
@@ -32,10 +42,11 @@ from src.render.video import (
 SUPPORTED_ALGORITHMS: dict[str, str] = {
     "bubble": "Bubble Sort",
     "bogo": "Bogo Sort",
-    # "selection": "Selection Sort",
-    # "insertion": "Insertion Sort",
-    # "quick": "Quick Sort",
-    # "merge": "Merge Sort",
+    "selection": "Selection Sort",
+    "insertion": "Insertion Sort",
+    "shell": "Shell Sort",
+    "merge": "Merge Sort",
+    "quick": "Quick Sort",
 }
 
 
@@ -143,7 +154,7 @@ def run_generation(args: argparse.Namespace) -> str:
     size: int = args.size
     seed: int = args.seed
 
-    if algorithm not in ("bubble", "bogo"):
+    if algorithm not in SUPPORTED_ALGORITHMS:
         raise NotImplementedError(
             f"アルゴリズム '{algorithm}' はまだ実装されていません。"
             f" 現在対応: {list(SUPPORTED_ALGORITHMS.keys())}"
@@ -153,6 +164,21 @@ def run_generation(args: argparse.Namespace) -> str:
     if algorithm == "bogo":
         render_video_fn = lambda path, **kw: render_bogo_sort_video(path, **kw, sort_seed=seed)
         prepare_events_fn = lambda **kw: prepare_bogo_sort_events(**kw, sort_seed=seed)
+    elif algorithm == "selection":
+        render_video_fn = render_selection_sort_video
+        prepare_events_fn = prepare_selection_sort_events
+    elif algorithm == "insertion":
+        render_video_fn = render_insertion_sort_video
+        prepare_events_fn = prepare_insertion_sort_events
+    elif algorithm == "shell":
+        render_video_fn = render_shell_sort_video
+        prepare_events_fn = prepare_shell_sort_events
+    elif algorithm == "merge":
+        render_video_fn = render_merge_sort_video
+        prepare_events_fn = prepare_merge_sort_events
+    elif algorithm == "quick":
+        render_video_fn = render_quick_sort_video
+        prepare_events_fn = prepare_quick_sort_events
     else:
         render_video_fn = render_bubble_sort_video
         prepare_events_fn = prepare_bubble_sort_events
