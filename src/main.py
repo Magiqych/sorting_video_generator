@@ -27,6 +27,12 @@ from src.render.video import (
     prepare_shell_sort_events,
     prepare_merge_sort_events,
     prepare_quick_sort_events,
+    prepare_heap_sort_events,
+    prepare_counting_sort_events,
+    prepare_radix_sort_events,
+    prepare_bucket_sort_events,
+    prepare_tim_sort_events,
+    prepare_intro_sort_events,
     render_bubble_sort_video,
     render_bogo_sort_video,
     render_selection_sort_video,
@@ -34,6 +40,12 @@ from src.render.video import (
     render_shell_sort_video,
     render_merge_sort_video,
     render_quick_sort_video,
+    render_heap_sort_video,
+    render_counting_sort_video,
+    render_radix_sort_video,
+    render_bucket_sort_video,
+    render_tim_sort_video,
+    render_intro_sort_video,
 )
 
 # ---- アルゴリズム registry ----
@@ -47,6 +59,12 @@ SUPPORTED_ALGORITHMS: dict[str, str] = {
     "shell": "Shell Sort",
     "merge": "Merge Sort",
     "quick": "Quick Sort",
+    "heap": "Heap Sort",
+    "counting": "Counting Sort",
+    "radix": "Radix Sort",
+    "bucket": "Bucket Sort",
+    "tim": "Tim Sort",
+    "intro": "Introsort",
 }
 
 
@@ -179,6 +197,24 @@ def run_generation(args: argparse.Namespace) -> str:
     elif algorithm == "quick":
         render_video_fn = render_quick_sort_video
         prepare_events_fn = prepare_quick_sort_events
+    elif algorithm == "heap":
+        render_video_fn = render_heap_sort_video
+        prepare_events_fn = prepare_heap_sort_events
+    elif algorithm == "counting":
+        render_video_fn = render_counting_sort_video
+        prepare_events_fn = prepare_counting_sort_events
+    elif algorithm == "radix":
+        render_video_fn = render_radix_sort_video
+        prepare_events_fn = prepare_radix_sort_events
+    elif algorithm == "bucket":
+        render_video_fn = render_bucket_sort_video
+        prepare_events_fn = prepare_bucket_sort_events
+    elif algorithm == "tim":
+        render_video_fn = render_tim_sort_video
+        prepare_events_fn = prepare_tim_sort_events
+    elif algorithm == "intro":
+        render_video_fn = render_intro_sort_video
+        prepare_events_fn = prepare_intro_sort_events
     else:
         render_video_fn = render_bubble_sort_video
         prepare_events_fn = prepare_bubble_sort_events

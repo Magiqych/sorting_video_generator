@@ -21,6 +21,12 @@ from src.algorithms.insertion_sort import insertion_sort
 from src.algorithms.shell_sort import shell_sort
 from src.algorithms.merge_sort import merge_sort
 from src.algorithms.quick_sort import quick_sort
+from src.algorithms.heap_sort import heap_sort
+from src.algorithms.counting_sort import counting_sort
+from src.algorithms.radix_sort import radix_sort
+from src.algorithms.bucket_sort import bucket_sort
+from src.algorithms.tim_sort import tim_sort
+from src.algorithms.intro_sort import intro_sort
 
 
 @dataclass
@@ -956,6 +962,528 @@ def prepare_quick_sort_events(
         sorted_values, shuffle_steps=intro_frames, seed=seed,
     )
     _, sort_events = quick_sort(shuffled_values)
+
+    return VideoEventPlan(
+        shuffle_events=shuffle_events,
+        sort_events=sort_events,
+        initial_hold_frames=cfg.FPS // 2,
+        end_hold_frames=cfg.FPS // 2,
+        size=size,
+        min_value=1,
+        max_value=size,
+    )
+
+
+def render_heap_sort_video(
+    output_path: str,
+    size: int = 32,
+    seed: int = 42,
+) -> str:
+    """Heap Sort の可視化動画を生成する。"""
+    sorted_values = build_sorted_values(size)
+    max_value = size
+
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = heap_sort(shuffled_values)
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(output_path, fourcc, cfg.FPS, (cfg.WIDTH, cfg.HEIGHT))
+    if not writer.isOpened():
+        raise RuntimeError(f"VideoWriter を開けませんでした: {output_path}")
+
+    try:
+        initial_hold = cfg.FPS // 2
+        for _ in range(initial_hold):
+            frame = render_bars_frame(
+                list(sorted_values), max_value=max_value, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(sorted_values)
+        sorted_indices: set[int] = set()
+        for event in shuffle_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(shuffled_values)
+        sorted_indices = set()
+        for event in sort_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state,
+                sorted_indices=sorted_indices, title="Heap Sort",
+            )
+            writer.write(frame)
+
+        all_sorted = set(range(size))
+        end_hold = cfg.FPS // 2
+        for _ in range(end_hold):
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                sorted_indices=all_sorted, title="Heap Sort",
+            )
+            writer.write(frame)
+    finally:
+        writer.release()
+
+    return output_path
+
+
+def prepare_heap_sort_events(
+    size: int = 32,
+    seed: int = 42,
+) -> VideoEventPlan:
+    """Heap Sort 動画用のイベント列とフレーム構成情報を準備する。"""
+    sorted_values = build_sorted_values(size)
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = heap_sort(shuffled_values)
+
+    return VideoEventPlan(
+        shuffle_events=shuffle_events,
+        sort_events=sort_events,
+        initial_hold_frames=cfg.FPS // 2,
+        end_hold_frames=cfg.FPS // 2,
+        size=size,
+        min_value=1,
+        max_value=size,
+    )
+
+
+def render_counting_sort_video(
+    output_path: str,
+    size: int = 32,
+    seed: int = 42,
+) -> str:
+    """Counting Sort の可視化動画を生成する。"""
+    sorted_values = build_sorted_values(size)
+    max_value = size
+
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = counting_sort(shuffled_values)
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(output_path, fourcc, cfg.FPS, (cfg.WIDTH, cfg.HEIGHT))
+    if not writer.isOpened():
+        raise RuntimeError(f"VideoWriter を開けませんでした: {output_path}")
+
+    try:
+        initial_hold = cfg.FPS // 2
+        for _ in range(initial_hold):
+            frame = render_bars_frame(
+                list(sorted_values), max_value=max_value, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(sorted_values)
+        sorted_indices: set[int] = set()
+        for event in shuffle_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(shuffled_values)
+        sorted_indices = set()
+        for event in sort_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state,
+                sorted_indices=sorted_indices, title="Counting Sort",
+            )
+            writer.write(frame)
+
+        all_sorted = set(range(size))
+        end_hold = cfg.FPS // 2
+        for _ in range(end_hold):
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                sorted_indices=all_sorted, title="Counting Sort",
+            )
+            writer.write(frame)
+    finally:
+        writer.release()
+
+    return output_path
+
+
+def prepare_counting_sort_events(
+    size: int = 32,
+    seed: int = 42,
+) -> VideoEventPlan:
+    """Counting Sort 動画用のイベント列とフレーム構成情報を準備する。"""
+    sorted_values = build_sorted_values(size)
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = counting_sort(shuffled_values)
+
+    return VideoEventPlan(
+        shuffle_events=shuffle_events,
+        sort_events=sort_events,
+        initial_hold_frames=cfg.FPS // 2,
+        end_hold_frames=cfg.FPS // 2,
+        size=size,
+        min_value=1,
+        max_value=size,
+    )
+
+
+def render_radix_sort_video(
+    output_path: str,
+    size: int = 32,
+    seed: int = 42,
+) -> str:
+    """Radix Sort の可視化動画を生成する。"""
+    sorted_values = build_sorted_values(size)
+    max_value = size
+
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = radix_sort(shuffled_values)
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(output_path, fourcc, cfg.FPS, (cfg.WIDTH, cfg.HEIGHT))
+    if not writer.isOpened():
+        raise RuntimeError(f"VideoWriter を開けませんでした: {output_path}")
+
+    try:
+        initial_hold = cfg.FPS // 2
+        for _ in range(initial_hold):
+            frame = render_bars_frame(
+                list(sorted_values), max_value=max_value, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(sorted_values)
+        sorted_indices: set[int] = set()
+        for event in shuffle_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(shuffled_values)
+        sorted_indices = set()
+        for event in sort_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state,
+                sorted_indices=sorted_indices, title="Radix Sort",
+            )
+            writer.write(frame)
+
+        all_sorted = set(range(size))
+        end_hold = cfg.FPS // 2
+        for _ in range(end_hold):
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                sorted_indices=all_sorted, title="Radix Sort",
+            )
+            writer.write(frame)
+    finally:
+        writer.release()
+
+    return output_path
+
+
+def prepare_radix_sort_events(
+    size: int = 32,
+    seed: int = 42,
+) -> VideoEventPlan:
+    """Radix Sort 動画用のイベント列とフレーム構成情報を準備する。"""
+    sorted_values = build_sorted_values(size)
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = radix_sort(shuffled_values)
+
+    return VideoEventPlan(
+        shuffle_events=shuffle_events,
+        sort_events=sort_events,
+        initial_hold_frames=cfg.FPS // 2,
+        end_hold_frames=cfg.FPS // 2,
+        size=size,
+        min_value=1,
+        max_value=size,
+    )
+
+
+def render_bucket_sort_video(
+    output_path: str,
+    size: int = 32,
+    seed: int = 42,
+) -> str:
+    """Bucket Sort の可視化動画を生成する。"""
+    sorted_values = build_sorted_values(size)
+    max_value = size
+
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = bucket_sort(shuffled_values)
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(output_path, fourcc, cfg.FPS, (cfg.WIDTH, cfg.HEIGHT))
+    if not writer.isOpened():
+        raise RuntimeError(f"VideoWriter を開けませんでした: {output_path}")
+
+    try:
+        initial_hold = cfg.FPS // 2
+        for _ in range(initial_hold):
+            frame = render_bars_frame(
+                list(sorted_values), max_value=max_value, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(sorted_values)
+        sorted_indices: set[int] = set()
+        for event in shuffle_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(shuffled_values)
+        sorted_indices = set()
+        for event in sort_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state,
+                sorted_indices=sorted_indices, title="Bucket Sort",
+            )
+            writer.write(frame)
+
+        all_sorted = set(range(size))
+        end_hold = cfg.FPS // 2
+        for _ in range(end_hold):
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                sorted_indices=all_sorted, title="Bucket Sort",
+            )
+            writer.write(frame)
+    finally:
+        writer.release()
+
+    return output_path
+
+
+def prepare_bucket_sort_events(
+    size: int = 32,
+    seed: int = 42,
+) -> VideoEventPlan:
+    """Bucket Sort 動画用のイベント列とフレーム構成情報を準備する。"""
+    sorted_values = build_sorted_values(size)
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = bucket_sort(shuffled_values)
+
+    return VideoEventPlan(
+        shuffle_events=shuffle_events,
+        sort_events=sort_events,
+        initial_hold_frames=cfg.FPS // 2,
+        end_hold_frames=cfg.FPS // 2,
+        size=size,
+        min_value=1,
+        max_value=size,
+    )
+
+
+def render_tim_sort_video(
+    output_path: str,
+    size: int = 32,
+    seed: int = 42,
+) -> str:
+    """Tim Sort の可視化動画を生成する。"""
+    sorted_values = build_sorted_values(size)
+    max_value = size
+
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = tim_sort(shuffled_values)
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(output_path, fourcc, cfg.FPS, (cfg.WIDTH, cfg.HEIGHT))
+    if not writer.isOpened():
+        raise RuntimeError(f"VideoWriter を開けませんでした: {output_path}")
+
+    try:
+        initial_hold = cfg.FPS // 2
+        for _ in range(initial_hold):
+            frame = render_bars_frame(
+                list(sorted_values), max_value=max_value, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(sorted_values)
+        sorted_indices: set[int] = set()
+        for event in shuffle_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(shuffled_values)
+        sorted_indices = set()
+        for event in sort_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state,
+                sorted_indices=sorted_indices, title="Tim Sort",
+            )
+            writer.write(frame)
+
+        all_sorted = set(range(size))
+        end_hold = cfg.FPS // 2
+        for _ in range(end_hold):
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                sorted_indices=all_sorted, title="Tim Sort",
+            )
+            writer.write(frame)
+    finally:
+        writer.release()
+
+    return output_path
+
+
+def prepare_tim_sort_events(
+    size: int = 32,
+    seed: int = 42,
+) -> VideoEventPlan:
+    """Tim Sort 動画用のイベント列とフレーム構成情報を準備する。"""
+    sorted_values = build_sorted_values(size)
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = tim_sort(shuffled_values)
+
+    return VideoEventPlan(
+        shuffle_events=shuffle_events,
+        sort_events=sort_events,
+        initial_hold_frames=cfg.FPS // 2,
+        end_hold_frames=cfg.FPS // 2,
+        size=size,
+        min_value=1,
+        max_value=size,
+    )
+
+
+def render_intro_sort_video(
+    output_path: str,
+    size: int = 32,
+    seed: int = 42,
+) -> str:
+    """Introsort の可視化動画を生成する。"""
+    sorted_values = build_sorted_values(size)
+    max_value = size
+
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = intro_sort(shuffled_values)
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(output_path, fourcc, cfg.FPS, (cfg.WIDTH, cfg.HEIGHT))
+    if not writer.isOpened():
+        raise RuntimeError(f"VideoWriter を開けませんでした: {output_path}")
+
+    try:
+        initial_hold = cfg.FPS // 2
+        for _ in range(initial_hold):
+            frame = render_bars_frame(
+                list(sorted_values), max_value=max_value, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(sorted_values)
+        sorted_indices: set[int] = set()
+        for event in shuffle_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state, title="Shuffle",
+            )
+            writer.write(frame)
+
+        current = list(shuffled_values)
+        sorted_indices = set()
+        for event in sort_events:
+            highlighted, state = _apply_event(current, event, sorted_indices)
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                highlighted_indices=highlighted, state=state,
+                sorted_indices=sorted_indices, title="Introsort",
+            )
+            writer.write(frame)
+
+        all_sorted = set(range(size))
+        end_hold = cfg.FPS // 2
+        for _ in range(end_hold):
+            frame = render_bars_frame(
+                current, max_value=max_value,
+                sorted_indices=all_sorted, title="Introsort",
+            )
+            writer.write(frame)
+    finally:
+        writer.release()
+
+    return output_path
+
+
+def prepare_intro_sort_events(
+    size: int = 32,
+    seed: int = 42,
+) -> VideoEventPlan:
+    """Introsort 動画用のイベント列とフレーム構成情報を準備する。"""
+    sorted_values = build_sorted_values(size)
+    intro_frames = int(cfg.INTRO_SECONDS * cfg.FPS)
+    shuffled_values, shuffle_events = build_intro_shuffle_events(
+        sorted_values, shuffle_steps=intro_frames, seed=seed,
+    )
+    _, sort_events = intro_sort(shuffled_values)
 
     return VideoEventPlan(
         shuffle_events=shuffle_events,
